@@ -1,0 +1,126 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model University {
+  id        String   @id @default(cuid())
+  slug      String   @unique
+  name      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  companies    Company[]
+  people       Person[]
+  templates    Template[]
+  outreachLogs OutreachLog[]
+
+  @@index([slug])
+}
+
+model Company {
+  id           String   @id @default(cuid())
+  universityId String
+  slug         String
+  name         String
+  description  String?
+  website      String?
+  linkedinUrl  String?
+  tags         String[] // e.g., ["AI", "Robotics", "AI-enabled robotics"]
+  segment      String?  // e.g., "Enterprise", "Consumer", etc.
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  newThisWeek  Boolean  @default(false)
+
+  university   University @relation(fields: [universityId], references: [id], onDelete: Cascade)
+  people       Person[]
+
+  @@unique([universityId, slug])
+  @@index([universityId])
+  @@index([universityId, slug])
+  @@index([newThisWeek])
+}
+
+model Person {
+  id           String   @id @default(cuid())
+  universityId String
+  companyId    String?
+  slug         String
+  firstName    String
+  lastName     String
+  email        String?
+  linkedinUrl  String?
+  profileUrl   String?
+  otherUrls    String[] // Array of evidence URLs
+  tags         String[] // e.g., ["AI", "Robotics"]
+  segment      String?  // e.g., "Enterprise", "Consumer"
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  newThisWeek  Boolean  @default(false)
+  lastContactedAt DateTime?
+  nextTouchAt  DateTime?
+
+  university   University @relation(fields: [universityId], references: [id], onDelete: Cascade)
+  company      Company?   @relation(fields: [companyId], references: [id], onDelete: SetNull)
+  outreachLogs OutreachLog[]
+
+  @@unique([universityId, slug])
+  @@index([universityId])
+  @@index([universityId, slug])
+  @@index([companyId])
+  @@index([nextTouchAt])
+  @@index([newThisWeek])
+}
+
+model Template {
+  id           String   @id @default(cuid())
+  universityId String
+  name         String
+  subject      String
+  body         String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  university   University @relation(fields: [universityId], references: [id], onDelete: Cascade)
+
+  @@index([universityId])
+}
+
+model OutreachLog {
+  id           String   @id @default(cuid())
+  universityId String
+  personId     String
+  templateId   String?
+  sentAt       DateTime @default(now())
+  notes        String?
+
+  university   University @relation(fields: [universityId], references: [id], onDelete: Cascade)
+  person       Person     @relation(fields: [personId], references: [id], onDelete: Cascade)
+  template     Template?  @relation(fields: [templateId], references: [id], onDelete: SetNull)
+
+  @@index([universityId])
+  @@index([personId])
+  @@index([sentAt])
+}
+
+model Subscription {
+  id                  String   @id @default(cuid())
+  userId              String   @unique // Clerk user_id
+  stripeCustomerId    String?  @unique
+  stripeSubscriptionId String? @unique
+  status              String   // active, canceled, past_due, etc.
+  plan                String?  // pro_monthly, pro_annual
+  currentPeriodEnd    DateTime?
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  @@index([userId])
+  @@index([status])
+}
