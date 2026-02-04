@@ -7,6 +7,13 @@ export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 
 export async function POST(req: NextRequest) {
+  if (!isStripeConfigured() || !stripe) {
+    return NextResponse.json(
+      { error: 'Stripe is not configured' },
+      { status: 503 }
+    )
+  }
+
   const body = await req.text()
   const headersList = await headers()
   const signature = headersList.get('stripe-signature')
