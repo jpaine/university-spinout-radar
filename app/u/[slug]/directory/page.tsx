@@ -75,8 +75,8 @@ export default async function DirectoryPage({ params, searchParams }: PageProps)
 
   const allSegments = Array.from(
     new Set([
-      ...allCompanies.map((c: { segment: string | null }) => c.segment).filter(Boolean),
-      ...allPeople.map((p: { segment: string | null }) => p.segment).filter(Boolean),
+      ...allCompanies.map((c: { segment: string | null }) => c.segment).filter((s): s is string => s !== null),
+      ...allPeople.map((p: { segment: string | null }) => p.segment).filter((s): s is string => s !== null),
     ])
   ).sort();
 
