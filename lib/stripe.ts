@@ -27,11 +27,15 @@ export function isStripeConfigured(): boolean {
 }
 
 // Lazy initialization - returns null if Stripe is not configured
-export const stripe = new Proxy({} as Stripe | null, {
+// For backward compatibility, create a proxy that handles null gracefully
+const stripeProxy = new Proxy({} as Record<string, any>, {
   get(_target, prop) {
     const instance = getStripe()
     if (!instance) {
-      return undefined
+      // Return a no-op function for methods, undefined for properties
+      return () => {
+        throw new Error('Stripe is not configured. Call isStripeConfigured() first.')
+      }
     }
     const value = instance[prop as keyof Stripe]
     if (typeof value === 'function') {
@@ -39,4 +43,6 @@ export const stripe = new Proxy({} as Stripe | null, {
     }
     return value
   },
-}) as Stripe | null
+})
+
+export const stripe = stripeProxy as Stripe
