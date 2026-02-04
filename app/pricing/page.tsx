@@ -37,7 +37,7 @@ export default async function PricingPage() {
             "Outreach logging",
             "Advanced filtering",
           ]}
-          priceId={process.env.STRIPE_PRO_MONTHLY_PRICE_ID!}
+          priceId={process.env.STRIPE_PRO_MONTHLY_PRICE_ID || null}
           isPro={true}
         />
         <PricingCard
@@ -52,7 +52,7 @@ export default async function PricingPage() {
             "Advanced filtering",
             "Save $58 per year",
           ]}
-          priceId={process.env.STRIPE_PRO_ANNUAL_PRICE_ID!}
+          priceId={process.env.STRIPE_PRO_ANNUAL_PRICE_ID || null}
           isPro={true}
         />
       </div>

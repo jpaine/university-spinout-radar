@@ -2,37 +2,41 @@ import Stripe from 'stripe'
 
 let stripeInstance: Stripe | null = null
 
-function getStripe(): Stripe {
+function getStripe(): Stripe | null {
+  // Skip during build phase
+  if (process.env.NEXT_PHASE === 'phase-production-build') {
+    return null
+  }
+  
+  // Runtime: only initialize if key is available
+  if (!process.env.STRIPE_SECRET_KEY) {
+    return null
+  }
+  
   if (!stripeInstance) {
-    // Skip validation during build phase
-    if (process.env.NEXT_PHASE === 'phase-production-build') {
-      // Return a placeholder during build - will be reinitialized at runtime
-      stripeInstance = new Stripe('sk_test_placeholder', {
-        apiVersion: '2023-10-16',
-        typescript: true,
-      })
-    } else {
-      // Runtime: validate and initialize properly
-      if (!process.env.STRIPE_SECRET_KEY) {
-        throw new Error('STRIPE_SECRET_KEY is not set')
-      }
-      stripeInstance = new Stripe(process.env.STRIPE_SECRET_KEY, {
-        apiVersion: '2023-10-16',
-        typescript: true,
-      })
-    }
+    stripeInstance = new Stripe(process.env.STRIPE_SECRET_KEY, {
+      apiVersion: '2023-10-16',
+      typescript: true,
+    })
   }
   return stripeInstance
 }
 
-// Lazy initialization - only creates instance when accessed
-export const stripe = new Proxy({} as Stripe, {
+export function isStripeConfigured(): boolean {
+  return !!process.env.STRIPE_SECRET_KEY
+}
+
+// Lazy initialization - returns null if Stripe is not configured
+export const stripe = new Proxy({} as Stripe | null, {
   get(_target, prop) {
     const instance = getStripe()
+    if (!instance) {
+      return undefined
+    }
     const value = instance[prop as keyof Stripe]
     if (typeof value === 'function') {
       return value.bind(instance)
     }
     return value
   },
-})
+}) as Stripe | null

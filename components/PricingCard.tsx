@@ -43,6 +43,16 @@ export function PricingCard({
         body: JSON.stringify({ priceId }),
       });
 
+      if (!res.ok) {
+        const data = await res.json();
+        if (res.status === 503) {
+          alert("Payment processing is not yet configured. Please contact support.");
+        } else {
+          alert(data.error || "Failed to start checkout. Please try again.");
+        }
+        return;
+      }
+
       const { url } = await res.json();
       if (url) {
         window.location.href = url;
@@ -88,7 +98,7 @@ export function PricingCard({
       </ul>
       <button
         onClick={handleSubscribe}
-        disabled={loading || !priceId}
+        disabled={loading || (!priceId && !isPro)}
         className={`w-full py-3 px-4 rounded-lg font-medium ${
           isPro
             ? "bg-blue-600 text-white hover:bg-blue-700"
@@ -97,6 +107,8 @@ export function PricingCard({
       >
         {loading
           ? "Loading..."
+          : !priceId && isPro
+          ? "Coming Soon"
           : !priceId
           ? "Current Plan"
           : isSignedIn
