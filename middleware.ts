@@ -1,5 +1,6 @@
 import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server'
 import { NextResponse } from 'next/server'
+import type { NextRequest } from 'next/server'
 
 const isPublicRoute = createRouteMatcher([
   '/',
@@ -9,29 +10,30 @@ const isPublicRoute = createRouteMatcher([
   '/api/stripe/webhook',
 ])
 
-export default clerkMiddleware(async (auth, req) => {
-  // If Clerk is not configured, allow all routes to pass through
-  if (!process.env.CLERK_SECRET_KEY) {
-    return NextResponse.next()
-  }
-
-  if (!isPublicRoute(req)) {
-    try {
-      const { userId } = await auth()
-      if (!userId) {
-        const signInUrl = new URL('/sign-in', req.url)
-        signInUrl.searchParams.set('redirect_url', req.url)
-        return NextResponse.redirect(signInUrl)
+// Only use clerkMiddleware if Clerk is configured
+const middleware = process.env.CLERK_SECRET_KEY
+  ? clerkMiddleware(async (auth, req) => {
+      if (!isPublicRoute(req)) {
+        try {
+          const { userId } = await auth()
+          if (!userId) {
+            const signInUrl = new URL('/sign-in', req.url)
+            signInUrl.searchParams.set('redirect_url', req.url)
+            return NextResponse.redirect(signInUrl)
+          }
+        } catch (error) {
+          console.error('Clerk auth error:', error)
+          return NextResponse.next()
+        }
       }
-    } catch (error) {
-      // If auth fails (e.g., Clerk not properly configured), allow request
-      console.error('Clerk auth error in middleware:', error)
+      return NextResponse.next()
+    })
+  : // Fallback middleware when Clerk is not configured
+    (req: NextRequest) => {
       return NextResponse.next()
     }
-  }
-  
-  return NextResponse.next()
-})
+
+export default middleware
 
 export const config = {
   matcher: [
