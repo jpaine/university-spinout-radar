@@ -17,7 +17,7 @@ A production-ready Next.js application for tracking and managing university spin
 
 - **Framework**: Next.js 14 (App Router)
 - **Language**: TypeScript
-- **Database**: Supabase Postgres with Prisma ORM
+- **Database**: Vercel Postgres (Neon) with Prisma ORM
 - **Authentication**: Clerk
 - **Payments**: Stripe (Checkout, Webhooks, Billing Portal)
 - **Styling**: Tailwind CSS
@@ -27,7 +27,7 @@ A production-ready Next.js application for tracking and managing university spin
 ### 1. Prerequisites
 
 - Node.js 18+ and npm
-- A Supabase account and project
+- A Vercel account (for database)
 - A Clerk account
 - A Stripe account
 
@@ -59,8 +59,11 @@ STRIPE_WEBHOOK_SECRET=whsec_...
 STRIPE_PRO_MONTHLY_PRICE_ID=price_...
 STRIPE_PRO_ANNUAL_PRICE_ID=price_...
 
-# Database
-DATABASE_URL=postgresql://user:password@host:5432/database
+# Database (Vercel Postgres - will be auto-populated when you create the database in Vercel)
+POSTGRES_URL=postgres://...
+POSTGRES_PRISMA_URL=postgres://...
+POSTGRES_URL_NON_POOLING=postgres://...
+DATABASE_URL=postgres://... (use POSTGRES_PRISMA_URL for Prisma)
 
 # App URL (for Stripe redirects)
 NEXT_PUBLIC_APP_URL=http://localhost:3000
@@ -91,19 +94,24 @@ NEXT_PUBLIC_APP_URL=http://localhost:3000
    - Select events: `checkout.session.completed`, `customer.subscription.created`, `customer.subscription.updated`, `customer.subscription.deleted`
    - Copy the webhook signing secret to your `.env` file
 
-### 6. Supabase Setup
+### 6. Vercel Postgres Setup
 
-1. Create a Supabase account at https://supabase.com
-2. Create a new project
-3. Go to Settings > Database
-4. Copy the connection string (use the "Connection pooling" URI for production)
-5. Add it to your `.env` file as `DATABASE_URL`
+1. In your Vercel project dashboard, go to the **Storage** tab
+2. Click **Create Database** and select **Postgres**
+3. Choose a name for your database and region
+4. Once created, Vercel will automatically add these environment variables:
+   - `POSTGRES_URL` - Connection pooling URL (for serverless)
+   - `POSTGRES_PRISMA_URL` - Prisma connection URL (use this for Prisma)
+   - `POSTGRES_URL_NON_POOLING` - Direct connection URL
+5. Set `DATABASE_URL` to the same value as `POSTGRES_PRISMA_URL` in your `.env` file
 6. Run Prisma migrations:
 
 ```bash
 npx prisma generate
 npx prisma db push
 ```
+
+**Note**: For local development, you can use the connection strings from Vercel dashboard, or set up a local Postgres database.
 
 ### 7. Seed Database
 
