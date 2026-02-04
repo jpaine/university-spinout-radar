@@ -10,14 +10,27 @@ const isPublicRoute = createRouteMatcher([
 ])
 
 export default clerkMiddleware(async (auth, req) => {
+  // If Clerk is not configured, allow all routes to pass through
+  if (!process.env.CLERK_SECRET_KEY) {
+    return NextResponse.next()
+  }
+
   if (!isPublicRoute(req)) {
-    const { userId } = await auth()
-    if (!userId) {
-      const signInUrl = new URL('/sign-in', req.url)
-      signInUrl.searchParams.set('redirect_url', req.url)
-      return NextResponse.redirect(signInUrl)
+    try {
+      const { userId } = await auth()
+      if (!userId) {
+        const signInUrl = new URL('/sign-in', req.url)
+        signInUrl.searchParams.set('redirect_url', req.url)
+        return NextResponse.redirect(signInUrl)
+      }
+    } catch (error) {
+      // If auth fails (e.g., Clerk not properly configured), allow request
+      console.error('Clerk auth error in middleware:', error)
+      return NextResponse.next()
     }
   }
+  
+  return NextResponse.next()
 })
 
 export const config = {
