@@ -3,11 +3,16 @@ import { currentUser } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 
 export default async function HomePage() {
-  const user = await currentUser();
+  try {
+    const user = await currentUser();
 
-  if (user) {
-    // Redirect to first university or create a default
-    redirect("/u/oxford/directory");
+    if (user) {
+      // Redirect to first university or create a default
+      redirect("/u/oxford/directory");
+    }
+  } catch (error) {
+    console.error("Error checking user:", error);
+    // Continue to show landing page if there's an error
   }
 
   return (

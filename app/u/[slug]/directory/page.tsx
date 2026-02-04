@@ -16,12 +16,36 @@ export default async function DirectoryPage({ params, searchParams }: PageProps)
     redirect("/sign-in");
   }
 
-  const university = await prisma.university.findUnique({
-    where: { slug },
-  });
+  let university;
+  try {
+    university = await prisma.university.findUnique({
+      where: { slug },
+    });
+  } catch (error) {
+    console.error("Database error:", error);
+    return (
+      <div className="max-w-4xl mx-auto px-4 py-16">
+        <div className="bg-red-50 border border-red-200 rounded-lg p-6">
+          <h1 className="text-2xl font-bold text-red-900 mb-2">Database Connection Error</h1>
+          <p className="text-red-700">
+            Unable to connect to the database. Please ensure the database is configured in Vercel.
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   if (!university) {
-    return <div className="p-8">University not found</div>;
+    return (
+      <div className="max-w-4xl mx-auto px-4 py-16">
+        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-6">
+          <h1 className="text-2xl font-bold text-yellow-900 mb-2">University Not Found</h1>
+          <p className="text-yellow-700">
+            The university "{slug}" was not found. Please seed the database or contact an administrator.
+          </p>
+        </div>
+      </div>
+    );
   }
 
   const isPro = await canAccessProFeatures();
