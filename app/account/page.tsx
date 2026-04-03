@@ -2,6 +2,7 @@ import { currentUser } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import { getUserSubscription } from "@/lib/subscription";
 import { ManageBillingButton } from "@/components/ManageBillingButton";
+import { NotificationPreferencesForm } from "@/components/NotificationPreferencesForm";
 
 export default async function AccountPage() {
   const user = await currentUser();
@@ -51,13 +52,23 @@ export default async function AccountPage() {
       </div>
 
       {subscription && (
-        <div className="bg-white rounded-lg shadow p-6">
+        <div className="bg-white rounded-lg shadow p-6 mb-6">
           <h2 className="text-xl font-semibold text-gray-900 mb-4">
             Billing Management
           </h2>
           <ManageBillingButton />
         </div>
       )}
+
+      <div className="bg-white rounded-lg shadow p-6">
+        <h2 className="text-xl font-semibold text-gray-900 mb-1">
+          Email Notifications
+        </h2>
+        <p className="text-sm text-gray-500 mb-5">
+          Choose what you hear about and how often.
+        </p>
+        <NotificationPreferencesForm />
+      </div>
     </div>
   );
 }

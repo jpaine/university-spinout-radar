@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { WatchlistButton } from "@/components/WatchlistButton";
 
 interface FeedItem {
   id: string;
@@ -39,7 +40,7 @@ interface Company {
 
 interface CompanyDetailViewProps {
   university: { id: string; slug: string; name: string };
-  company: Company;
+  company: Company & { id: string };
   isPro: boolean;
 }
 
@@ -111,6 +112,7 @@ export function CompanyDetailView({
             )}
           </div>
           <div className="flex flex-col items-end gap-2 shrink-0">
+            <WatchlistButton companyId={company.id} />
             {company.fundingStage && (
               <span className={`text-sm px-3 py-1 rounded-full font-medium ${STAGE_COLORS[company.fundingStage] ?? "bg-gray-100 text-gray-700"}`}>
                 {company.fundingStage}

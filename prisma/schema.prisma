@@ -183,3 +183,27 @@ model Technology {
   @@index([status])
   @@index([publishedAt])
 }
+
+model Watchlist {
+  id           String   @id @default(cuid())
+  userId       String   // Clerk user_id
+  companyId    String?  // specific company watch
+  sector       String?  // watch all companies in a sector
+  fundingStage String?  // watch all at a specific stage
+  createdAt    DateTime @default(now())
+
+  @@index([userId])
+  @@index([companyId])
+}
+
+model NotificationPreference {
+  id              String  @id @default(cuid())
+  userId          String  @unique
+  email           String? // user's email address for sending
+  weeklyDigest    Boolean @default(true)
+  newSpinoutAlert Boolean @default(false)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([userId])
+}
