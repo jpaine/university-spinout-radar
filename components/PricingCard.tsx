@@ -11,6 +11,7 @@ interface PricingCardProps {
   features: string[];
   priceId: string | null;
   isPro: boolean;
+  highlight?: boolean;
 }
 
 export function PricingCard({
@@ -20,6 +21,7 @@ export function PricingCard({
   features,
   priceId,
   isPro,
+  highlight,
 }: PricingCardProps) {
   const { isSignedIn } = useUser();
   const router = useRouter();
@@ -67,11 +69,18 @@ export function PricingCard({
 
   return (
     <div
-      className={`bg-white rounded-lg shadow-lg p-8 ${
-        isPro ? "border-2 border-blue-500" : ""
+      className={`bg-white rounded-xl shadow-sm p-7 relative ${
+        highlight ? "border-2 border-blue-500 shadow-blue-100" : "border border-gray-200"
       }`}
     >
-      <h3 className="text-2xl font-bold text-gray-900 mb-2">{name}</h3>
+      {highlight && (
+        <div className="absolute -top-3 left-1/2 -translate-x-1/2">
+          <span className="bg-blue-600 text-white text-xs font-semibold px-3 py-1 rounded-full">
+            Most Popular
+          </span>
+        </div>
+      )}
+      <h3 className="text-xl font-bold text-gray-900 mb-2">{name}</h3>
       <div className="mb-4">
         <span className="text-4xl font-bold text-gray-900">{price}</span>
         <span className="text-gray-600 ml-2">{period}</span>

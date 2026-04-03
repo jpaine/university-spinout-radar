@@ -29,6 +29,10 @@ export default async function CompanyDetailPage({ params }: PageProps) {
       people: {
         orderBy: { lastName: "asc" },
       },
+      feedItems: {
+        orderBy: { publishedAt: "desc" },
+        take: 5,
+      },
     },
   });
 

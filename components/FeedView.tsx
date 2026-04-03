@@ -84,18 +84,24 @@ export function FeedView({ university, feedItems, stats }: FeedViewProps) {
       </div>
 
       {/* Navigation */}
-      <div className="flex gap-4 mb-6 text-sm">
+      <div className="flex gap-4 mb-6 text-sm border-b border-gray-200">
         <Link
           href={`/u/${university.slug}/feed`}
-          className="font-medium text-gray-900 border-b-2 border-gray-900 pb-1"
+          className="font-medium text-gray-900 border-b-2 border-gray-900 pb-3 -mb-px"
         >
           Activity Feed
         </Link>
         <Link
           href={`/u/${university.slug}/directory`}
-          className="text-gray-500 hover:text-gray-900 pb-1"
+          className="text-gray-500 hover:text-gray-900 pb-3"
         >
           Companies
+        </Link>
+        <Link
+          href={`/u/${university.slug}/technologies`}
+          className="text-gray-500 hover:text-gray-900 pb-3"
+        >
+          IP Pipeline
         </Link>
       </div>
 
