@@ -18,7 +18,7 @@ export default async function PricingPage() {
         <div className="grid md:grid-cols-3 gap-6 mb-12">
           <PricingCard
             name="Free"
-            price="$0"
+            price="£0"
             period="forever"
             features={[
               "Browse all spinout companies",
@@ -32,7 +32,7 @@ export default async function PricingPage() {
           />
           <PricingCard
             name="Pro Monthly"
-            price="$29"
+            price="£29"
             period="per month"
             highlight={true}
             features={[
@@ -48,11 +48,11 @@ export default async function PricingPage() {
           />
           <PricingCard
             name="Pro Annual"
-            price="$290"
+            price="£249"
             period="per year"
             features={[
               "Everything in Pro Monthly",
-              "Save $58 vs monthly",
+              "Save £99 vs monthly",
               "Priority data updates",
             ]}
             priceId={process.env.STRIPE_PRO_ANNUAL_PRICE_ID || null}
