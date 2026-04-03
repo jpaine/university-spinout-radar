@@ -12,6 +12,9 @@
     "db:push": "prisma db push",
     "db:migrate": "prisma migrate dev",
     "db:seed": "tsx prisma/seed.ts",
+    "db:import": "tsx scripts/import-data-sources.ts",
+    "db:import-oui": "tsx scripts/import-oui-companies.ts",
+    "db:import-oui-full": "tsx scripts/import-oui-full-portfolio.ts",
     "setup:db": "./scripts/setup-database.sh"
   },
   "dependencies": {

@@ -21,31 +21,44 @@ model University {
   people       Person[]
   templates    Template[]
   outreachLogs OutreachLog[]
+  feedItems    FeedItem[]
+  technologies Technology[]
 
   @@index([slug])
 }
 
 model Company {
-  id           String   @id @default(cuid())
-  universityId String
-  slug         String
-  name         String
-  description  String?
-  website      String?
-  linkedinUrl  String?
-  tags         String[] // e.g., ["AI", "Robotics", "AI-enabled robotics"]
-  segment      String? // e.g., "Enterprise", "Consumer", etc.
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-  newThisWeek  Boolean  @default(false)
+  id                String   @id @default(cuid())
+  universityId      String
+  slug              String
+  name              String
+  description       String?
+  website           String?
+  linkedinUrl       String?
+  tags              String[] // e.g., ["AI", "Robotics", "AI-enabled robotics"]
+  segment           String? // e.g., "Enterprise", "Consumer", etc.
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  newThisWeek       Boolean  @default(false)
+  // Investor-relevant fields
+  foundedDate       DateTime?
+  fundingStage      String? // e.g., "Pre-Seed", "Seed", "Series A"
+  fundingRaised     String? // e.g., "£2M", "£500K" — free-text for flexibility
+  technologySummary String? // Brief summary of IP/technology
+  investmentStatus  String? // e.g., "Raising", "Funded", "Bootstrapped"
+  sector            String? // e.g., "HealthTech", "DeepTech", "AI", "CleanTech"
+  isEcosystemOrg    Boolean  @default(false) // true = support org, false = investable company
 
   university University @relation(fields: [universityId], references: [id], onDelete: Cascade)
   people     Person[]
+  feedItems  FeedItem[]
 
   @@unique([universityId, slug])
   @@index([universityId])
   @@index([universityId, slug])
   @@index([newThisWeek])
+  @@index([isEcosystemOrg])
+  @@index([sector])
 }
 
 model Person {
@@ -70,6 +83,7 @@ model Person {
   university   University    @relation(fields: [universityId], references: [id], onDelete: Cascade)
   company      Company?      @relation(fields: [companyId], references: [id], onDelete: SetNull)
   outreachLogs OutreachLog[]
+  feedItems    FeedItem[]
 
   @@unique([universityId, slug])
   @@index([universityId])
@@ -124,4 +138,48 @@ model Subscription {
 
   @@index([userId])
   @@index([status])
+}
+
+model FeedItem {
+  id           String   @id @default(cuid())
+  universityId String
+  companyId    String?
+  personId     String?
+  type         String // "new_spinout", "funding_round", "event", "news", "new_person"
+  title        String
+  summary      String?
+  sourceUrl    String?
+  publishedAt  DateTime @default(now())
+  createdAt    DateTime @default(now())
+
+  university University @relation(fields: [universityId], references: [id], onDelete: Cascade)
+  company    Company?   @relation(fields: [companyId], references: [id], onDelete: SetNull)
+  person     Person?    @relation(fields: [personId], references: [id], onDelete: SetNull)
+
+  @@index([universityId, publishedAt])
+  @@index([type])
+  @@index([companyId])
+}
+
+// Pre-company IP available for licensing from Oxford — future spinout pipeline
+model Technology {
+  id              String   @id @default(cuid())
+  universityId    String
+  ouiRef          String?  // OUI reference number e.g. "2024/3421"
+  title           String
+  summary         String?
+  sector          String?  // e.g. "Life Sciences", "Deep Tech", "AI"
+  tags            String[]
+  sourceUrl       String?  // link to OUI technology page
+  status          String   @default("available") // "available", "licensed", "spinout_formed"
+  publishedAt     DateTime? // when OUI listed it
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  university University @relation(fields: [universityId], references: [id], onDelete: Cascade)
+
+  @@index([universityId])
+  @@index([sector])
+  @@index([status])
+  @@index([publishedAt])
 }

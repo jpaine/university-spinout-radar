@@ -52,13 +52,16 @@ export default async function DirectoryPage({ params, searchParams }: PageProps)
   const searchParamsResolved = await searchParams;
   const tag = searchParamsResolved.tag as string | undefined;
   const segment = searchParamsResolved.segment as string | undefined;
+  const sector = searchParamsResolved.sector as string | undefined;
   const newThisWeek = searchParamsResolved.newThisWeek === "true";
+  const view = searchParamsResolved.view as string | undefined;
 
   const companies = await prisma.company.findMany({
     where: {
       universityId: university.id,
       ...(tag && { tags: { has: tag } }),
       ...(segment && { segment }),
+      ...(sector && { sector }),
       ...(newThisWeek && { newThisWeek: true }),
     },
     include: {
@@ -80,10 +83,10 @@ export default async function DirectoryPage({ params, searchParams }: PageProps)
     orderBy: { lastName: "asc" },
   });
 
-  // Get all unique tags and segments for filters
+  // Get all unique tags, segments, and sectors for filters
   const allCompanies = await prisma.company.findMany({
     where: { universityId: university.id },
-    select: { tags: true, segment: true },
+    select: { tags: true, segment: true, sector: true },
   });
   const allPeople = await prisma.person.findMany({
     where: { universityId: university.id },
@@ -92,16 +95,22 @@ export default async function DirectoryPage({ params, searchParams }: PageProps)
 
   const allTags = Array.from(
     new Set([
-      ...allCompanies.flatMap((c: { tags: string[] }) => c.tags),
-      ...allPeople.flatMap((p: { tags: string[] }) => p.tags),
+      ...allCompanies.flatMap((c) => c.tags),
+      ...allPeople.flatMap((p) => p.tags),
     ])
   ).sort();
 
   const allSegments = Array.from(
     new Set([
-      ...allCompanies.map((c: { segment: string | null }) => c.segment).filter((s: string | null): s is string => s !== null),
-      ...allPeople.map((p: { segment: string | null }) => p.segment).filter((s: string | null): s is string => s !== null),
+      ...allCompanies.map((c) => c.segment).filter((s): s is string => s !== null),
+      ...allPeople.map((p) => p.segment).filter((s): s is string => s !== null),
     ])
+  ).sort();
+
+  const allSectors = Array.from(
+    new Set(
+      allCompanies.map((c) => c.sector).filter((s): s is string => s !== null)
+    )
   ).sort();
 
   return (
@@ -112,7 +121,8 @@ export default async function DirectoryPage({ params, searchParams }: PageProps)
       isPro={isPro}
       tags={allTags}
       segments={allSegments}
-      currentFilters={{ tag, segment, newThisWeek }}
+      sectors={allSectors}
+      currentFilters={{ tag, segment, sector, newThisWeek, view }}
     />
   );
 }

@@ -13,7 +13,7 @@ export function Navbar() {
         <div className="flex justify-between h-16">
           <div className="flex items-center">
             <Link href="/" className="text-xl font-bold text-gray-900">
-              University Spinout Radar
+              Oxford Deal Flow
             </Link>
           </div>
           <div className="flex items-center gap-4">
@@ -26,10 +26,22 @@ export function Navbar() {
             </SignedOut>
             <SignedIn>
               <Link
+                href="/u/oxford/feed"
+                className="text-gray-700 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium"
+              >
+                Feed
+              </Link>
+              <Link
                 href="/u/oxford/directory"
                 className="text-gray-700 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium"
               >
-                Directory
+                Companies
+              </Link>
+              <Link
+                href="/u/oxford/technologies"
+                className="text-gray-700 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium"
+              >
+                IP Pipeline
               </Link>
               <Link
                 href="/pricing"
