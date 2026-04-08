@@ -5,13 +5,15 @@ import { useState, useEffect } from "react";
 interface WatchlistButtonProps {
   companyId: string;
   compact?: boolean;
+  initialWatched?: boolean;
 }
 
-export function WatchlistButton({ companyId, compact = false }: WatchlistButtonProps) {
-  const [watching, setWatching] = useState(false);
-  const [loading, setLoading] = useState(true);
+export function WatchlistButton({ companyId, compact = false, initialWatched }: WatchlistButtonProps) {
+  const [watching, setWatching] = useState(initialWatched ?? false);
+  const [loading, setLoading] = useState(initialWatched === undefined);
 
   useEffect(() => {
+    if (initialWatched !== undefined) return;
     fetch("/api/watchlist")
       .then((r) => r.json())
       .then((items: { companyId: string }[]) => {
@@ -19,7 +21,7 @@ export function WatchlistButton({ companyId, compact = false }: WatchlistButtonP
         setLoading(false);
       })
       .catch(() => setLoading(false));
-  }, [companyId]);
+  }, [companyId, initialWatched]);
 
   const toggle = async () => {
     setLoading(true);
