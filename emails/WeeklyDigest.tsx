@@ -134,7 +134,7 @@ export function WeeklyDigest({
           {/* CTA */}
           <Section style={{ textAlign: "center" as const }}>
             <Link
-              href={`${appUrl}/u/oxford/feed`}
+              href={`${appUrl}/u/${process.env.NEXT_PUBLIC_DEFAULT_UNIVERSITY_SLUG ?? "oxford"}/feed`}
               style={{ backgroundColor: "#111827", color: "#ffffff", padding: "12px 28px", borderRadius: "6px", fontSize: "14px", fontWeight: "600", textDecoration: "none", display: "inline-block" }}
             >
               View Full Feed →

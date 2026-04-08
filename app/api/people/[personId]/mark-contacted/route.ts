@@ -19,13 +19,23 @@ export async function POST(
     }
 
     const { personId } = await params
-    const { nextTouchAt } = await req.json()
+    const { nextTouchAt, templateId } = await req.json()
 
-    await prisma.person.update({
+    const updatedPerson = await prisma.person.update({
       where: { id: personId },
       data: {
         lastContactedAt: new Date(),
         nextTouchAt: nextTouchAt ? new Date(nextTouchAt) : null,
+      },
+    })
+
+    // Log this outreach contact
+    await prisma.outreachLog.create({
+      data: {
+        personId,
+        universityId: updatedPerson.universityId,
+        templateId: templateId || null,
+        sentAt: new Date(),
       },
     })
 

@@ -12,6 +12,7 @@ interface PricingCardProps {
   priceId: string | null;
   isPro: boolean;
   highlight?: boolean;
+  trialDays?: number;
 }
 
 export function PricingCard({
@@ -22,6 +23,7 @@ export function PricingCard({
   priceId,
   isPro,
   highlight,
+  trialDays,
 }: PricingCardProps) {
   const { isSignedIn } = useUser();
   const router = useRouter();
@@ -67,6 +69,15 @@ export function PricingCard({
     }
   };
 
+  const buttonLabel = () => {
+    if (loading) return "Loading...";
+    if (!priceId && isPro) return "Coming Soon";
+    if (!priceId) return "Current Plan";
+    if (!isSignedIn) return "Sign in to start free trial";
+    if (trialDays) return `Start ${trialDays}-day free trial`;
+    return "Subscribe";
+  };
+
   return (
     <div
       className={`bg-white rounded-xl shadow-sm p-7 relative ${
@@ -81,10 +92,16 @@ export function PricingCard({
         </div>
       )}
       <h3 className="text-xl font-bold text-gray-900 mb-2">{name}</h3>
-      <div className="mb-4">
+      <div className="mb-1">
         <span className="text-4xl font-bold text-gray-900">{price}</span>
         <span className="text-gray-600 ml-2">{period}</span>
       </div>
+      {isPro && trialDays && priceId && (
+        <p className="text-xs text-green-600 font-medium mb-4">
+          ✓ {trialDays}-day free trial — no card charged until day {trialDays + 1}
+        </p>
+      )}
+      {(!isPro || !trialDays || !priceId) && <div className="mb-4" />}
       <ul className="mb-6 space-y-2">
         {features.map((feature, idx) => (
           <li key={idx} className="flex items-start">
@@ -114,15 +131,7 @@ export function PricingCard({
             : "bg-gray-200 text-gray-900 hover:bg-gray-300"
         } disabled:opacity-50 disabled:cursor-not-allowed`}
       >
-        {loading
-          ? "Loading..."
-          : !priceId && isPro
-          ? "Coming Soon"
-          : !priceId
-          ? "Current Plan"
-          : isSignedIn
-          ? "Subscribe"
-          : "Sign In to Subscribe"}
+        {buttonLabel()}
       </button>
     </div>
   );

@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { slugify } from "@/lib/utils";
+import { AdminCsvImport } from "@/components/AdminCsvImport";
 
 interface AdminPeopleProps {
   universityId: string;
@@ -12,6 +13,7 @@ export function AdminPeople({ universityId }: AdminPeopleProps) {
   const [companies, setCompanies] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState<string | null>(null);
+  const [showImport, setShowImport] = useState(false);
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
@@ -125,7 +127,25 @@ export function AdminPeople({ universityId }: AdminPeopleProps) {
 
   return (
     <div>
-      <h2 className="text-2xl font-semibold text-gray-900 mb-4">People</h2>
+      <div className="flex items-center justify-between mb-4">
+        <h2 className="text-2xl font-semibold text-gray-900">People</h2>
+        <button
+          onClick={() => setShowImport(!showImport)}
+          className="text-sm border border-gray-300 bg-white text-gray-700 px-3 py-1.5 rounded-md hover:bg-gray-50 transition-colors font-medium"
+        >
+          {showImport ? "Hide Import" : "Import CSV"}
+        </button>
+      </div>
+      {showImport && (
+        <AdminCsvImport
+          type="people"
+          universityId={universityId}
+          onComplete={() => {
+            fetchData();
+            setShowImport(false);
+          }}
+        />
+      )}
 
       <form onSubmit={handleSubmit} className="bg-white rounded-lg shadow p-6 mb-6">
         <div className="grid md:grid-cols-2 gap-4 mb-4">

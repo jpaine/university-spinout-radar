@@ -108,7 +108,7 @@ export function FeedView({ university, feedItems, stats }: FeedViewProps) {
       {/* Feed */}
       {feedItems.length === 0 ? (
         <div className="bg-gray-50 border border-gray-200 rounded-lg p-8 text-center">
-          <p className="text-gray-500">No activity yet. Run the import script to seed the feed.</p>
+          <p className="text-gray-500">No activity yet. New spinouts, funding rounds, and events will appear here as they&apos;re added.</p>
         </div>
       ) : (
         <div className="space-y-4">

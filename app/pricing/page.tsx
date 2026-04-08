@@ -11,7 +11,7 @@ export default async function PricingPage() {
         <div className="text-center mb-12">
           <h1 className="text-4xl font-bold text-gray-900 mb-3">Simple pricing</h1>
           <p className="text-lg text-gray-500">
-            Free to browse. Pro for the intelligence that matters.
+            Free to browse. Pro includes a 7-day free trial.
           </p>
         </div>
 
@@ -45,6 +45,7 @@ export default async function PricingPage() {
             ]}
             priceId={process.env.STRIPE_PRO_MONTHLY_PRICE_ID || null}
             isPro={true}
+            trialDays={7}
           />
           <PricingCard
             name="Pro Annual"
@@ -57,6 +58,7 @@ export default async function PricingPage() {
             ]}
             priceId={process.env.STRIPE_PRO_ANNUAL_PRICE_ID || null}
             isPro={true}
+            trialDays={7}
           />
         </div>
 

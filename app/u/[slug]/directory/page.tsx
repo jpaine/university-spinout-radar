@@ -4,6 +4,8 @@ import { canAccessProFeatures } from "@/lib/access";
 import { DirectoryView } from "@/components/DirectoryView";
 import { redirect } from "next/navigation";
 
+const PAGE_SIZE = 50;
+
 interface PageProps {
   params: Promise<{ slug: string }>;
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
@@ -55,43 +57,65 @@ export default async function DirectoryPage({ params, searchParams }: PageProps)
   const sector = searchParamsResolved.sector as string | undefined;
   const newThisWeek = searchParamsResolved.newThisWeek === "true";
   const view = searchParamsResolved.view as string | undefined;
+  const page = Math.max(1, parseInt((searchParamsResolved.page as string) || "1", 10));
+  const skip = (page - 1) * PAGE_SIZE;
+  const sort = (searchParamsResolved.sort as string) || "name";
 
-  const companies = await prisma.company.findMany({
-    where: {
-      universityId: university.id,
-      ...(tag && { tags: { has: tag } }),
-      ...(segment && { segment }),
-      ...(sector && { sector }),
-      ...(newThisWeek && { newThisWeek: true }),
-    },
-    include: {
-      people: true,
-    },
-    orderBy: { name: "asc" },
-  });
+  const companyOrderBy =
+    sort === "newest" ? { createdAt: "desc" as const } :
+    sort === "stage"  ? { fundingStage: "asc" as const } :
+                        { name: "asc" as const };
 
-  const people = await prisma.person.findMany({
-    where: {
-      universityId: university.id,
-      ...(tag && { tags: { has: tag } }),
-      ...(segment && { segment }),
-      ...(newThisWeek && { newThisWeek: true }),
-    },
-    include: {
-      company: true,
-    },
-    orderBy: { lastName: "asc" },
-  });
+  const peopleOrderBy =
+    sort === "newest" ? { createdAt: "desc" as const } :
+                        { lastName: "asc" as const };
 
-  // Get all unique tags, segments, and sectors for filters
-  const allCompanies = await prisma.company.findMany({
-    where: { universityId: university.id },
-    select: { tags: true, segment: true, sector: true },
-  });
-  const allPeople = await prisma.person.findMany({
-    where: { universityId: university.id },
-    select: { tags: true, segment: true },
-  });
+  // Build reusable where clauses
+  const companyWhere = {
+    universityId: university.id,
+    ...(tag && { tags: { has: tag } }),
+    ...(segment && { segment }),
+    ...(sector && { sector }),
+    ...(newThisWeek && { newThisWeek: true }),
+  };
+
+  const peopleWhere = {
+    universityId: university.id,
+    ...(tag && { tags: { has: tag } }),
+    ...(segment && { segment }),
+    ...(newThisWeek && { newThisWeek: true }),
+  };
+
+  const [companies, totalCompanies, people, totalPeople] = await Promise.all([
+    prisma.company.findMany({
+      where: companyWhere,
+      include: { people: true },
+      orderBy: companyOrderBy,
+      take: PAGE_SIZE,
+      skip,
+    }),
+    prisma.company.count({ where: companyWhere }),
+    prisma.person.findMany({
+      where: peopleWhere,
+      include: { company: true },
+      orderBy: peopleOrderBy,
+      take: PAGE_SIZE,
+      skip,
+    }),
+    prisma.person.count({ where: peopleWhere }),
+  ]);
+
+  // Get all unique tags, segments, and sectors for filters (no pagination — need full set)
+  const [allCompanies, allPeople] = await Promise.all([
+    prisma.company.findMany({
+      where: { universityId: university.id },
+      select: { tags: true, segment: true, sector: true },
+    }),
+    prisma.person.findMany({
+      where: { universityId: university.id },
+      select: { tags: true, segment: true },
+    }),
+  ]);
 
   const allTags = Array.from(
     new Set([
@@ -122,7 +146,11 @@ export default async function DirectoryPage({ params, searchParams }: PageProps)
       tags={allTags}
       segments={allSegments}
       sectors={allSectors}
-      currentFilters={{ tag, segment, sector, newThisWeek, view }}
+      currentFilters={{ tag, segment, sector, newThisWeek, view, sort }}
+      page={page}
+      pageSize={PAGE_SIZE}
+      totalCompanies={totalCompanies}
+      totalPeople={totalPeople}
     />
   );
 }

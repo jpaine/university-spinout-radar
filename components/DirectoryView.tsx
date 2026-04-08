@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState, useMemo } from "react";
+import { PaginationBar } from "@/components/PaginationBar";
 
 interface Company {
   id: string;
@@ -32,7 +33,12 @@ interface DirectoryViewProps {
     sector?: string;
     newThisWeek?: boolean;
     view?: string;
+    sort?: string;
   };
+  page?: number;
+  pageSize?: number;
+  totalCompanies?: number;
+  totalPeople?: number;
 }
 
 export function DirectoryView({
@@ -44,6 +50,10 @@ export function DirectoryView({
   segments,
   sectors,
   currentFilters,
+  page = 1,
+  pageSize = 50,
+  totalCompanies,
+  totalPeople,
 }: DirectoryViewProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -64,6 +74,10 @@ export function DirectoryView({
 
   const spinouts = companies.filter((c) => !c.isEcosystemOrg);
   const ecosystemOrgs = companies.filter((c) => c.isEcosystemOrg);
+
+  // Use server totals when paginating, fall back to current page counts
+  const displayTotalCompanies = totalCompanies ?? companies.length;
+  const displayTotalPeople = totalPeople ?? people.length;
 
   const filteredSpinouts = useMemo(() => {
     if (!search.trim()) return spinouts;
@@ -122,7 +136,7 @@ export function DirectoryView({
       <div className="mb-6">
         <h1 className="text-3xl font-bold text-gray-900 mb-1">Companies</h1>
         <p className="text-gray-500 text-sm">
-          {spinouts.length} spinouts &middot; {ecosystemOrgs.length} ecosystem orgs &middot; {people.length} people
+          {displayTotalCompanies} companies &middot; {displayTotalPeople} people
         </p>
       </div>
 
@@ -211,6 +225,18 @@ export function DirectoryView({
               ))}
             </select>
           </div>
+          {/* Sort */}
+          <div className="md:w-40">
+            <select
+              value={currentFilters.sort || "name"}
+              onChange={(e) => updateFilter("sort", e.target.value === "name" ? null : e.target.value)}
+              className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm"
+            >
+              <option value="name">Name A–Z</option>
+              <option value="newest">Newest first</option>
+              <option value="stage">By stage</option>
+            </select>
+          </div>
           {/* New this week */}
           <div className="flex items-center">
             <label className="flex items-center gap-2 text-sm text-gray-700 cursor-pointer">
@@ -226,9 +252,9 @@ export function DirectoryView({
         </div>
         {search && (
           <div className="mt-2 text-xs text-gray-500">
-            {activeTab === "spinouts" && `${filteredSpinouts.length} of ${spinouts.length} companies`}
-            {activeTab === "ecosystem" && `${filteredEcosystem.length} of ${ecosystemOrgs.length} orgs`}
-            {activeTab === "people" && `${filteredPeople.length} of ${people.length} people`}
+            {activeTab === "spinouts" && `${filteredSpinouts.length} of ${spinouts.length} companies on this page`}
+            {activeTab === "ecosystem" && `${filteredEcosystem.length} of ${ecosystemOrgs.length} orgs on this page`}
+            {activeTab === "people" && `${filteredPeople.length} of ${people.length} people on this page`}
           </div>
         )}
       </div>
@@ -279,6 +305,21 @@ export function DirectoryView({
               )}
             </div>
           )}
+          {!search && (
+            <PaginationBar
+              page={page}
+              total={displayTotalCompanies}
+              pageSize={pageSize}
+              baseUrl={`/u/${university.slug}/directory`}
+              preserveParams={{
+                tag: currentFilters.tag,
+                sector: currentFilters.sector,
+                segment: currentFilters.segment,
+                newThisWeek: currentFilters.newThisWeek ? "true" : undefined,
+                sort: currentFilters.sort,
+              }}
+            />
+          )}
         </div>
       )}
 
@@ -317,6 +358,22 @@ export function DirectoryView({
               )}
             </div>
           )}
+          {!search && (
+            <PaginationBar
+              page={page}
+              total={displayTotalCompanies}
+              pageSize={pageSize}
+              baseUrl={`/u/${university.slug}/directory`}
+              preserveParams={{
+                tag: currentFilters.tag,
+                sector: currentFilters.sector,
+                segment: currentFilters.segment,
+                newThisWeek: currentFilters.newThisWeek ? "true" : undefined,
+                sort: currentFilters.sort,
+                view: "ecosystem",
+              }}
+            />
+          )}
         </div>
       )}
 
@@ -336,7 +393,16 @@ export function DirectoryView({
                 <p className="text-sm text-gray-500 mb-2">{person.company.name}</p>
               )}
               {!isPro && person.email && (
-                <p className="text-xs text-gray-400 italic">Email available with Pro</p>
+                <a
+                  href="/pricing"
+                  onClick={(e) => e.stopPropagation()}
+                  className="inline-flex items-center gap-1 text-xs bg-blue-50 text-blue-700 border border-blue-200 px-2 py-0.5 rounded-full font-medium hover:bg-blue-100 transition-colors mt-1"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="w-3 h-3" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" />
+                  </svg>
+                  Unlock with Pro →
+                </a>
               )}
               {isPro && person.email && (
                 <p className="text-sm text-gray-700">{person.email}</p>
@@ -359,6 +425,21 @@ export function DirectoryView({
                 </button>
               )}
             </div>
+          )}
+          {!search && (
+            <PaginationBar
+              page={page}
+              total={displayTotalPeople}
+              pageSize={pageSize}
+              baseUrl={`/u/${university.slug}/directory`}
+              preserveParams={{
+                tag: currentFilters.tag,
+                segment: currentFilters.segment,
+                newThisWeek: currentFilters.newThisWeek ? "true" : undefined,
+                sort: currentFilters.sort,
+                view: "people",
+              }}
+            />
           )}
         </div>
       )}

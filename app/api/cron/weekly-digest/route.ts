@@ -12,9 +12,10 @@ export async function GET(req: NextRequest) {
   const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://university-spinout-radar.vercel.app";
 
   try {
-    const university = await prisma.university.findUnique({ where: { slug: "oxford" } });
+    const universitySlug = process.env.DEFAULT_UNIVERSITY_SLUG ?? process.env.NEXT_PUBLIC_DEFAULT_UNIVERSITY_SLUG ?? "oxford";
+    const university = await prisma.university.findUnique({ where: { slug: universitySlug } });
     if (!university) {
-      return NextResponse.json({ error: "Oxford university not found" }, { status: 404 });
+      return NextResponse.json({ error: `University "${universitySlug}" not found` }, { status: 404 });
     }
 
     // Get feed items from the last 7 days

@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { slugify } from "@/lib/utils";
+import { AdminCsvImport } from "@/components/AdminCsvImport";
 
 interface AdminCompaniesProps {
   universityId: string;
@@ -35,6 +36,7 @@ export function AdminCompanies({ universityId }: AdminCompaniesProps) {
   const [editing, setEditing] = useState<string | null>(null);
   const [search, setSearch] = useState("");
   const [formData, setFormData] = useState(EMPTY_FORM);
+  const [showImport, setShowImport] = useState(false);
 
   useEffect(() => {
     fetchCompanies();
@@ -134,9 +136,27 @@ export function AdminCompanies({ universityId }: AdminCompaniesProps) {
 
   return (
     <div>
-      <h2 className="text-2xl font-semibold text-gray-900 mb-4">
-        Companies {editing && <span className="text-blue-600 text-lg font-normal">— Editing</span>}
-      </h2>
+      <div className="flex items-center justify-between mb-4">
+        <h2 className="text-2xl font-semibold text-gray-900">
+          Companies {editing && <span className="text-blue-600 text-lg font-normal">— Editing</span>}
+        </h2>
+        <button
+          onClick={() => setShowImport(!showImport)}
+          className="text-sm border border-gray-300 bg-white text-gray-700 px-3 py-1.5 rounded-md hover:bg-gray-50 transition-colors font-medium"
+        >
+          {showImport ? "Hide Import" : "Import CSV"}
+        </button>
+      </div>
+      {showImport && (
+        <AdminCsvImport
+          type="companies"
+          universityId={universityId}
+          onComplete={() => {
+            fetchCompanies();
+            setShowImport(false);
+          }}
+        />
+      )}
 
       <form onSubmit={handleSubmit} className="bg-white rounded-lg shadow p-6 mb-6">
         {/* Basic info */}

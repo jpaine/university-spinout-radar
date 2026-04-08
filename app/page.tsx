@@ -7,7 +7,7 @@ export default async function HomePage() {
   try {
     const user = await currentUser();
     if (user) {
-      redirect("/u/oxford/feed");
+      redirect("/welcome");
     }
   } catch (error) {
     console.error("Error checking user:", error);

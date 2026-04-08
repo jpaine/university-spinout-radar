@@ -98,9 +98,20 @@ export function PersonDetailView({
             </p>
           )}
           {!isPro && person.email && (
-            <p className="text-gray-500">
-              Email available with Pro subscription
-            </p>
+            <div className="flex items-center gap-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+              <div className="flex-1">
+                <p className="text-sm font-medium text-blue-900">Email hidden</p>
+                <p className="text-xs text-blue-700 mt-0.5">
+                  Upgrade to Pro to see founder emails and contact details.
+                </p>
+              </div>
+              <Link
+                href="/pricing"
+                className="shrink-0 bg-blue-600 text-white px-3 py-1.5 rounded-md text-xs font-medium hover:bg-blue-700 transition-colors"
+              >
+                Unlock with Pro →
+              </Link>
+            </div>
           )}
           {person.linkedinUrl && (
             <p>

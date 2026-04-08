@@ -2,6 +2,7 @@ import { currentUser } from "@clerk/nextjs/server";
 import { prisma } from "@/lib/prisma";
 import { canAccessProFeatures } from "@/lib/access";
 import { QuarterlyWorkflowView } from "@/components/QuarterlyWorkflowView";
+import { QuarterlyTeaser } from "@/components/QuarterlyTeaser";
 import { redirect } from "next/navigation";
 import { notFound } from "next/navigation";
 
@@ -16,17 +17,17 @@ export default async function QuarterlyPage({ params }: PageProps) {
     redirect("/sign-in");
   }
 
-  const isPro = await canAccessProFeatures();
-  if (!isPro) {
-    redirect("/pricing");
-  }
-
   const university = await prisma.university.findUnique({
     where: { slug },
   });
 
   if (!university) {
     notFound();
+  }
+
+  const isPro = await canAccessProFeatures();
+  if (!isPro) {
+    return <QuarterlyTeaser university={university} />;
   }
 
   const templates = await prisma.template.findMany({
@@ -51,11 +52,25 @@ export default async function QuarterlyPage({ params }: PageProps) {
     orderBy: { nextTouchAt: "asc" },
   });
 
+  const personIds = people.map((p) => p.id);
+  const logs = await prisma.outreachLog.findMany({
+    where: { personId: { in: personIds } },
+    include: { template: { select: { name: true } } },
+    orderBy: { sentAt: "desc" },
+  });
+
+  const outreachLogs: Record<string, typeof logs> = {};
+  for (const log of logs) {
+    if (!outreachLogs[log.personId]) outreachLogs[log.personId] = [];
+    outreachLogs[log.personId].push(log);
+  }
+
   return (
     <QuarterlyWorkflowView
       university={university}
       people={people}
       templates={templates}
+      outreachLogs={outreachLogs}
     />
   );
 }
