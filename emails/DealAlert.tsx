@@ -31,7 +31,7 @@ export function DealAlert({ newCompanies, appUrl }: DealAlertProps) {
     <Html>
       <Head />
       <Preview>
-        {count} new Oxford spinout{count !== 1 ? "s" : ""} match your watchlist
+        {`${count} new Oxford spinout${count !== 1 ? "s" : ""} match your watchlist`}
       </Preview>
       <Body
         style={{
