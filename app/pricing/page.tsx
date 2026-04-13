@@ -11,7 +11,7 @@ export default async function PricingPage() {
         <div className="text-center mb-12">
           <h1 className="text-4xl font-bold text-gray-900 mb-3">Simple pricing</h1>
           <p className="text-lg text-gray-500">
-            Free to browse. Pro includes a 7-day free trial.
+            Free to browse. Investor tier includes a 7-day free trial.
           </p>
         </div>
 
@@ -21,18 +21,18 @@ export default async function PricingPage() {
             price="£0"
             period="forever"
             features={[
-              "Browse all spinout companies",
+              "Browse all Oxford spinouts",
               "Activity feed",
               "IP Pipeline (pre-company tech)",
               "Sector and stage filters",
-              "Search across 300+ companies",
+              "Search across 500+ companies",
             ]}
             priceId={null}
             isPro={false}
           />
           <PricingCard
-            name="Pro Monthly"
-            price="£29"
+            name="Investor"
+            price="£99"
             period="per month"
             highlight={true}
             features={[
@@ -41,19 +41,19 @@ export default async function PricingPage() {
               "Deal alerts by sector or stage",
               "Weekly digest email",
               "Outreach templates + logging",
-              "Quarterly deal review workflow",
+              "IP Pipeline licensing alerts",
             ]}
             priceId={process.env.STRIPE_PRO_MONTHLY_PRICE_ID || null}
             isPro={true}
             trialDays={7}
           />
           <PricingCard
-            name="Pro Annual"
-            price="£249"
+            name="Investor Annual"
+            price="£990"
             period="per year"
             features={[
-              "Everything in Pro Monthly",
-              "Save £99 vs monthly",
+              "Everything in Investor Monthly",
+              "Save £198 vs monthly",
               "Priority data updates",
             ]}
             priceId={process.env.STRIPE_PRO_ANNUAL_PRICE_ID || null}
@@ -74,7 +74,7 @@ export default async function PricingPage() {
               </dd>
             </div>
             <div>
-              <dt className="font-medium text-gray-700">Pro tier</dt>
+              <dt className="font-medium text-gray-700">Investor tier</dt>
               <dd className="text-gray-500 mt-1">
                 Get founder contact details, set up deal alerts so new spinouts in your focus area
                 land in your inbox, and track your outreach pipeline. Built for investors who are

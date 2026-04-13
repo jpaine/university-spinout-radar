@@ -23,8 +23,8 @@ export default async function AccountPage({
   const showSuccess = params.success === "true";
 
   const formatPlanName = (plan: string | null) => {
-    if (plan === "pro_monthly") return "Pro Monthly";
-    if (plan === "pro_annual") return "Pro Annual";
+    if (plan === "pro_monthly") return "Investor Monthly";
+    if (plan === "pro_annual") return "Investor Annual";
     return plan ?? "—";
   };
 

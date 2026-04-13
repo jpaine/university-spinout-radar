@@ -69,7 +69,7 @@ export function QuarterlyTeaser({ university }: QuarterlyTeaserProps) {
               Upgrade to Pro →
             </Link>
             <p className="text-xs text-gray-400 mt-3">
-              From £29/month · Cancel anytime
+              From £99/month · Cancel anytime
             </p>
           </div>
         </div>
