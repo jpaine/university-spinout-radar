@@ -15,22 +15,37 @@ export async function GET(req: NextRequest) {
   try {
     // Find new spinouts added in the last 7 days or flagged as new this week
     const oneWeekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
-    const newCompanies = await prisma.company.findMany({
-      where: {
-        isEcosystemOrg: false,
-        OR: [{ newThisWeek: true }, { createdAt: { gte: oneWeekAgo } }],
-      },
-      select: {
-        id: true,
-        name: true,
-        slug: true,
-        sector: true,
-        description: true,
-      },
-    });
+    const [newCompanies, recentlyLicensed] = await Promise.all([
+      prisma.company.findMany({
+        where: {
+          isEcosystemOrg: false,
+          OR: [{ newThisWeek: true }, { createdAt: { gte: oneWeekAgo } }],
+        },
+        select: {
+          id: true,
+          name: true,
+          slug: true,
+          sector: true,
+          description: true,
+        },
+      }),
+      prisma.technology.findMany({
+        where: {
+          status: "licensed",
+          updatedAt: { gte: oneWeekAgo },
+        },
+        select: {
+          id: true,
+          title: true,
+          sector: true,
+          summary: true,
+          sourceUrl: true,
+        },
+      }),
+    ]);
 
-    if (newCompanies.length === 0) {
-      return NextResponse.json({ ok: true, message: "No new companies this week", sent: 0 });
+    if (newCompanies.length === 0 && recentlyLicensed.length === 0) {
+      return NextResponse.json({ ok: true, message: "No new companies or IP signals this week", sent: 0 });
     }
 
     // Get users with deal alerts enabled
@@ -78,14 +93,21 @@ export async function GET(req: NextRequest) {
       const companiesToSend =
         userWatchlist.length === 0 ? newCompanies : matchedCompanies;
 
-      if (companiesToSend.length === 0) continue;
+      if (companiesToSend.length === 0 && recentlyLicensed.length === 0) continue;
+
+      const subjectParts: string[] = [];
+      if (companiesToSend.length > 0)
+        subjectParts.push(`${companiesToSend.length} new spinout${companiesToSend.length !== 1 ? "s" : ""}`);
+      if (recentlyLicensed.length > 0)
+        subjectParts.push(`${recentlyLicensed.length} IP signal${recentlyLicensed.length !== 1 ? "s" : ""}`);
 
       try {
         await sendEmail({
           to: pref.email,
-          subject: `${companiesToSend.length} new Oxford spinout${companiesToSend.length !== 1 ? "s" : ""} on your radar`,
+          subject: `Oxford radar: ${subjectParts.join(" + ")}`,
           react: React.createElement(DealAlert, {
             newCompanies: companiesToSend,
+            recentlyLicensed,
             appUrl,
           }),
         });
@@ -99,6 +121,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({
       ok: true,
       newCompanies: newCompanies.length,
+      recentlyLicensed: recentlyLicensed.length,
       recipients: prefs.length,
       sent,
       failed,

@@ -5,6 +5,10 @@
       "schedule": "0 9 * * *"
     },
     {
+      "path": "/api/cron/oui-technologies",
+      "schedule": "30 8 * * *"
+    },
+    {
       "path": "/api/cron/companies-house",
       "schedule": "0 8 * * 1"
     },

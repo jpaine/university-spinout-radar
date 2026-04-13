@@ -19,19 +19,30 @@ interface DealAlertCompany {
   description: string | null;
 }
 
+interface DealAlertTech {
+  id: string;
+  title: string;
+  sector: string | null;
+  summary: string | null;
+  sourceUrl: string | null;
+}
+
 interface DealAlertProps {
   newCompanies: DealAlertCompany[];
+  recentlyLicensed?: DealAlertTech[];
   appUrl: string;
 }
 
-export function DealAlert({ newCompanies, appUrl }: DealAlertProps) {
+export function DealAlert({ newCompanies, recentlyLicensed = [], appUrl }: DealAlertProps) {
   const count = newCompanies.length;
 
   return (
     <Html>
       <Head />
       <Preview>
-        {`${count} new Oxford spinout${count !== 1 ? "s" : ""} match your watchlist`}
+        {count > 0
+          ? `${count} new Oxford spinout${count !== 1 ? "s" : ""} on your radar`
+          : `${recentlyLicensed.length} Oxford IP signal${recentlyLicensed.length !== 1 ? "s" : ""} — potential spinouts forming`}
       </Preview>
       <Body
         style={{
@@ -76,58 +87,129 @@ export function DealAlert({ newCompanies, appUrl }: DealAlertProps) {
           <Text
             style={{ fontSize: "14px", color: "#6b7280", margin: "0 0 32px" }}
           >
-            {count} new Oxford spinout{count !== 1 ? "s" : ""}{" "}
-            {count !== 1 ? "match" : "matches"} your watchlist criteria.
+            {[
+              count > 0 && `${count} new spinout${count !== 1 ? "s" : ""}`,
+              recentlyLicensed.length > 0 && `${recentlyLicensed.length} IP signal${recentlyLicensed.length !== 1 ? "s" : ""}`,
+            ]
+              .filter(Boolean)
+              .join(" + ")}{" "}
+            this week from Oxford.
           </Text>
 
-          {/* Company list */}
-          <Section style={{ marginBottom: "28px" }}>
-            {newCompanies.map((company, i) => (
-              <div
-                key={i}
-                style={{
-                  borderLeft: "3px solid #10b981",
-                  paddingLeft: "12px",
-                  marginBottom: "16px",
-                }}
-              >
-                <Text
+          {/* New spinouts */}
+          {count > 0 && (
+            <Section style={{ marginBottom: "28px" }}>
+              {newCompanies.map((company, i) => (
+                <div
+                  key={i}
                   style={{
-                    fontSize: "14px",
-                    fontWeight: "600",
-                    color: "#111827",
-                    margin: "0 0 2px",
+                    borderLeft: "3px solid #10b981",
+                    paddingLeft: "12px",
+                    marginBottom: "16px",
                   }}
                 >
-                  <Link
-                    href={`${appUrl}/u/${process.env.NEXT_PUBLIC_DEFAULT_UNIVERSITY_SLUG ?? "oxford"}/companies/${company.slug}`}
-                    style={{ color: "#111827", textDecoration: "none" }}
-                  >
-                    {company.name}
-                  </Link>
-                </Text>
-                {company.sector && (
                   <Text
                     style={{
-                      fontSize: "12px",
-                      color: "#6b7280",
+                      fontSize: "14px",
+                      fontWeight: "600",
+                      color: "#111827",
                       margin: "0 0 2px",
                     }}
                   >
-                    {company.sector}
+                    <Link
+                      href={`${appUrl}/u/${process.env.NEXT_PUBLIC_DEFAULT_UNIVERSITY_SLUG ?? "oxford"}/companies/${company.slug}`}
+                      style={{ color: "#111827", textDecoration: "none" }}
+                    >
+                      {company.name}
+                    </Link>
                   </Text>
-                )}
-                {company.description && (
+                  {company.sector && (
+                    <Text
+                      style={{
+                        fontSize: "12px",
+                        color: "#6b7280",
+                        margin: "0 0 2px",
+                      }}
+                    >
+                      {company.sector}
+                    </Text>
+                  )}
+                  {company.description && (
+                    <Text
+                      style={{ fontSize: "13px", color: "#6b7280", margin: "0" }}
+                    >
+                      {company.description.slice(0, 140)}
+                      {company.description.length > 140 ? "…" : ""}
+                    </Text>
+                  )}
+                </div>
+              ))}
+            </Section>
+          )}
+
+          {/* IP Pipeline signals */}
+          {recentlyLicensed.length > 0 && (
+            <Section style={{ marginBottom: "28px" }}>
+              <Text
+                style={{
+                  fontSize: "12px",
+                  fontWeight: "600",
+                  color: "#6b7280",
+                  textTransform: "uppercase" as const,
+                  letterSpacing: "0.08em",
+                  margin: "0 0 12px",
+                }}
+              >
+                IP Pipeline — Potential Spinouts Forming
+              </Text>
+              {recentlyLicensed.map((tech, i) => (
+                <div
+                  key={i}
+                  style={{
+                    borderLeft: "3px solid #8b5cf6",
+                    paddingLeft: "12px",
+                    marginBottom: "16px",
+                  }}
+                >
                   <Text
-                    style={{ fontSize: "13px", color: "#6b7280", margin: "0" }}
+                    style={{
+                      fontSize: "14px",
+                      fontWeight: "600",
+                      color: "#111827",
+                      margin: "0 0 2px",
+                    }}
                   >
-                    {company.description.slice(0, 140)}
-                    {company.description.length > 140 ? "…" : ""}
+                    {tech.sourceUrl ? (
+                      <Link
+                        href={tech.sourceUrl}
+                        style={{ color: "#111827", textDecoration: "none" }}
+                      >
+                        {tech.title}
+                      </Link>
+                    ) : (
+                      tech.title
+                    )}
                   </Text>
-                )}
-              </div>
-            ))}
-          </Section>
+                  {tech.sector && (
+                    <Text
+                      style={{
+                        fontSize: "12px",
+                        color: "#6b7280",
+                        margin: "0 0 2px",
+                      }}
+                    >
+                      {tech.sector}
+                    </Text>
+                  )}
+                  <Text
+                    style={{ fontSize: "12px", color: "#8b5cf6", margin: "0" }}
+                  >
+                    Licensed by OUI — spinout may be forming
+                  </Text>
+                </div>
+              ))}
+            </Section>
+          )}
 
           <Hr style={{ borderColor: "#e5e7eb", margin: "28px 0" }} />
 
