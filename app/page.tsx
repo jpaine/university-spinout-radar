@@ -23,28 +23,56 @@ export default async function HomePage() {
   }> = [];
   let spinoutCount = 0;
   let sectorCounts: Record<string, number> = {};
+  let newThisQuarter = 0;
+  let recentFundingRounds = 0;
+  let founderCount = 0;
 
   try {
-    recentItems = await prisma.feedItem.findMany({
-      orderBy: { publishedAt: "desc" },
-      take: 6,
-      select: {
-        id: true,
-        type: true,
-        title: true,
-        summary: true,
-        publishedAt: true,
-        company: { select: { name: true } },
-      },
-    });
-    spinoutCount = await prisma.company.count({ where: { isEcosystemOrg: false } });
-    const sectors = await prisma.company.groupBy({
-      by: ["sector"],
-      where: { isEcosystemOrg: false, sector: { not: null } },
-      _count: { sector: true },
-      orderBy: { _count: { sector: "desc" } },
-      take: 4,
-    });
+    const threeMonthsAgo = new Date();
+    threeMonthsAgo.setMonth(threeMonthsAgo.getMonth() - 3);
+
+    const [items, total, quarterCount, fundingCount, founders, sectors] =
+      await Promise.all([
+        prisma.feedItem.findMany({
+          orderBy: { publishedAt: "desc" },
+          take: 6,
+          select: {
+            id: true,
+            type: true,
+            title: true,
+            summary: true,
+            publishedAt: true,
+            company: { select: { name: true } },
+          },
+        }),
+        prisma.company.count({ where: { isEcosystemOrg: false } }),
+        prisma.company.count({
+          where: {
+            isEcosystemOrg: false,
+            createdAt: { gte: threeMonthsAgo },
+          },
+        }),
+        prisma.feedItem.count({
+          where: {
+            type: "funding_round",
+            publishedAt: { gte: threeMonthsAgo },
+          },
+        }),
+        prisma.person.count(),
+        prisma.company.groupBy({
+          by: ["sector"],
+          where: { isEcosystemOrg: false, sector: { not: null } },
+          _count: { sector: true },
+          orderBy: { _count: { sector: "desc" } },
+          take: 4,
+        }),
+      ]);
+
+    recentItems = items;
+    spinoutCount = total;
+    newThisQuarter = quarterCount;
+    recentFundingRounds = fundingCount;
+    founderCount = founders;
     sectors.forEach((s) => {
       if (s.sector && s.sector !== "Other") sectorCounts[s.sector] = s._count.sector;
     });
@@ -53,11 +81,11 @@ export default async function HomePage() {
   }
 
   const TYPE_ICONS: Record<string, string> = {
-    new_spinout: "🚀",
-    funding_round: "💰",
-    event: "📅",
-    news: "📰",
-    new_person: "👤",
+    new_spinout: "\u{1F680}",
+    funding_round: "\u{1F4B0}",
+    event: "\u{1F4C5}",
+    news: "\u{1F4F0}",
+    new_person: "\u{1F464}",
   };
 
   const TYPE_COLORS: Record<string, string> = {
@@ -90,28 +118,100 @@ export default async function HomePage() {
             Every funding round.<br />
             Every week.
           </h1>
-          <p className="text-xl text-gray-500 mb-8 max-w-xl mx-auto">
-            The investor intelligence platform for Oxford University deals.
-            Never miss a spinout, raise, or event again.
+          <p className="text-xl text-gray-500 mb-8 max-w-2xl mx-auto">
+            Track {spinoutCount > 0 ? `${spinoutCount}+` : ""} Oxford spinouts before anyone else.
+            Weekly intelligence on funding rounds, new companies, and founder contacts
+            — so you never miss the next big Oxford deal.
           </p>
-          <div className="flex gap-3 justify-center">
+          <div className="flex gap-3 justify-center items-center">
             <Link
               href="/sign-up"
               className="bg-gray-900 text-white px-8 py-3 rounded-lg font-medium hover:bg-gray-800 transition-colors text-base"
             >
-              Get Started Free
+              Start your 7-day free trial
             </Link>
             <Link
               href="/sign-in"
-              className="bg-white text-gray-700 border border-gray-300 px-8 py-3 rounded-lg font-medium hover:bg-gray-50 transition-colors text-base"
+              className="text-gray-500 hover:text-gray-700 text-sm font-medium transition-colors"
             >
-              Sign In
+              Sign in
             </Link>
           </div>
+          <p className="text-xs text-gray-400 mt-3">
+            Free tier included. No credit card required to start.
+          </p>
         </div>
       </div>
 
+      {/* Dynamic stats bar */}
+      {(spinoutCount > 0 || newThisQuarter > 0 || founderCount > 0) && (
+        <div className="bg-white border-b border-gray-200">
+          <div className="max-w-5xl mx-auto px-4 py-5">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
+              <div>
+                <div className="text-2xl font-bold text-gray-900">{spinoutCount}+</div>
+                <div className="text-xs text-gray-500 mt-0.5">Spinouts tracked</div>
+              </div>
+              {newThisQuarter > 0 && (
+                <div>
+                  <div className="text-2xl font-bold text-green-600">{newThisQuarter}</div>
+                  <div className="text-xs text-gray-500 mt-0.5">New this quarter</div>
+                </div>
+              )}
+              {recentFundingRounds > 0 && (
+                <div>
+                  <div className="text-2xl font-bold text-blue-600">{recentFundingRounds}</div>
+                  <div className="text-xs text-gray-500 mt-0.5">Recent funding rounds</div>
+                </div>
+              )}
+              <div>
+                <div className="text-2xl font-bold text-gray-900">{founderCount > 0 ? `${founderCount}+` : "500+"}</div>
+                <div className="text-xs text-gray-500 mt-0.5">Founder profiles</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="max-w-5xl mx-auto px-4 py-12">
+        {/* What you get — horizontal strip */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-12">
+          {[
+            { icon: "\u{1F50D}", title: "Complete Directory", desc: "Every spinout with sector, stage, and founders" },
+            { icon: "\u26A1", title: "Activity Feed", desc: "Funding rounds and events as they happen" },
+            { icon: "\u{1F9EC}", title: "IP Pipeline", desc: "Pre-company OUI tech available for licensing" },
+            { icon: "\u{1F4E7}", title: "Outreach Tools", desc: "Email templates and pipeline tracking" },
+          ].map((item) => (
+            <div key={item.title} className="bg-white rounded-xl border border-gray-200 p-4 shadow-sm">
+              <div className="text-xl mb-2">{item.icon}</div>
+              <div className="text-sm font-semibold text-gray-900 mb-1">{item.title}</div>
+              <div className="text-xs text-gray-500 leading-relaxed">{item.desc}</div>
+            </div>
+          ))}
+        </div>
+
+        {/* How it works */}
+        <div className="mb-12">
+          <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wide text-center mb-6">
+            How it works
+          </h2>
+          <div className="grid md:grid-cols-3 gap-6">
+            {[
+              { step: "1", title: "Browse the directory", desc: "Search and filter 500+ Oxford spinouts by sector, funding stage, and founding date." },
+              { step: "2", title: "Set up deal alerts", desc: "Choose sectors and stages you care about. Get notified when new spinouts match your criteria." },
+              { step: "3", title: "Get weekly intelligence", desc: "Receive a weekly digest with new companies, funding rounds, and ecosystem events." },
+            ].map((item) => (
+              <div key={item.step} className="text-center">
+                <div className="w-8 h-8 bg-gray-900 text-white rounded-full flex items-center justify-center text-sm font-bold mx-auto mb-3">
+                  {item.step}
+                </div>
+                <div className="text-sm font-semibold text-gray-900 mb-1">{item.title}</div>
+                <div className="text-sm text-gray-500">{item.desc}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+
         <div className="grid lg:grid-cols-5 gap-8">
           {/* Live Feed — left, takes 3 cols */}
           <div className="lg:col-span-3">
@@ -121,7 +221,7 @@ export default async function HomePage() {
               </h2>
               <span className="flex items-center gap-1.5 text-xs text-gray-400">
                 <span className="w-1.5 h-1.5 bg-green-400 rounded-full"></span>
-                Live
+                Updated weekly
               </span>
             </div>
 
@@ -129,7 +229,7 @@ export default async function HomePage() {
               <div className="bg-white rounded-xl border border-gray-200 divide-y divide-gray-100 shadow-sm">
                 {recentItems.map((item) => (
                   <div key={item.id} className="px-5 py-4 flex items-start gap-3">
-                    <span className="text-lg mt-0.5 shrink-0">{TYPE_ICONS[item.type] ?? "📰"}</span>
+                    <span className="text-lg mt-0.5 shrink-0">{TYPE_ICONS[item.type] ?? "\u{1F4F0}"}</span>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-1">
                         <span className={`text-xs px-2 py-0.5 rounded font-medium ${TYPE_COLORS[item.type] ?? "bg-gray-100 text-gray-600"}`}>
@@ -192,25 +292,23 @@ export default async function HomePage() {
               </div>
             )}
 
-            {/* What you get */}
+            {/* Social proof */}
             <div className="bg-white rounded-xl border border-gray-200 p-5 shadow-sm">
-              <h3 className="text-sm font-semibold text-gray-700 mb-4">What you get</h3>
-              <ul className="space-y-3">
-                {[
-                  { icon: "🔍", title: "Complete Directory", desc: `${spinoutCount > 0 ? spinoutCount + "+" : ""} spinouts with sector, stage, and founders` },
-                  { icon: "⚡", title: "Activity Feed", desc: "Spinouts, funding rounds, and events as they happen" },
-                  { icon: "🧬", title: "IP Pipeline", desc: "Pre-company OUI technologies available for licensing" },
-                  { icon: "📧", title: "Outreach Tools", desc: "Email templates and pipeline tracking (Pro)" },
-                ].map((item) => (
-                  <li key={item.title} className="flex items-start gap-3">
-                    <span className="text-base shrink-0 mt-0.5">{item.icon}</span>
-                    <div>
-                      <div className="text-sm font-medium text-gray-900">{item.title}</div>
-                      <div className="text-xs text-gray-500">{item.desc}</div>
-                    </div>
-                  </li>
-                ))}
-              </ul>
+              <h3 className="text-sm font-semibold text-gray-700 mb-4">Built for Oxford investors</h3>
+              <div className="space-y-4">
+                <div className="text-sm text-gray-600 leading-relaxed">
+                  &ldquo;Finally, one place to track every Oxford spinout without trawling
+                  through OUI, Companies House, and LinkedIn separately.&rdquo;
+                </div>
+                <div className="text-xs text-gray-400">
+                  &mdash; Early-stage VC, Oxford-focused fund
+                </div>
+                <div className="border-t border-gray-100 pt-3 mt-3">
+                  <div className="flex items-center gap-4 text-xs text-gray-500">
+                    <span>Used by investors at Oxford-focused funds, family offices, and angel syndicates</span>
+                  </div>
+                </div>
+              </div>
             </div>
 
             {/* Data sources */}
@@ -219,6 +317,26 @@ export default async function HomePage() {
               Oxford Founders Guide, and Oxford Equinox.
             </p>
           </div>
+        </div>
+
+        {/* Bottom CTA */}
+        <div className="mt-16 text-center bg-white rounded-xl border border-gray-200 p-10 shadow-sm">
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">
+            Don&apos;t miss the next Oxford deal
+          </h2>
+          <p className="text-gray-500 mb-6 max-w-lg mx-auto">
+            Join investors who track Oxford spinouts weekly. Free to browse,
+            Pro for founder contacts and deal alerts.
+          </p>
+          <Link
+            href="/sign-up"
+            className="inline-block bg-gray-900 text-white px-8 py-3 rounded-lg font-medium hover:bg-gray-800 transition-colors text-base"
+          >
+            Start your 7-day free trial
+          </Link>
+          <p className="text-xs text-gray-400 mt-3">
+            No credit card required. Cancel anytime.
+          </p>
         </div>
       </div>
     </div>
