@@ -8,6 +8,7 @@ const isPublicRoute = createRouteMatcher([
   '/sign-up(.*)',
   '/pricing',
   '/api/stripe/webhook',
+  '/api/cron/(.*)',
 ])
 
 // Only use clerkMiddleware if Clerk is configured
